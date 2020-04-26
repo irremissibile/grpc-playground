@@ -12,7 +12,8 @@ public class CalculatorClient {
 
         CalculatorServiceGrpc.CalculatorServiceBlockingStub syncClient = CalculatorServiceGrpc.newBlockingStub(channel);
 
-        System.out.println("Sum request: 10.7 + 3.2");
+        // Unary
+        /*System.out.println("Sum request: 10.7 + 3.2");
         SumRequest sumRequest = SumRequest.newBuilder()
                 .setFirstNumber(10.7)
                 .setSecondNumber(3.2)
@@ -43,6 +44,13 @@ public class CalculatorClient {
                 .build();
         DivideResponse divideResponse = syncClient.divide(divideRequest);
         System.out.println(divideResponse.getDivideResult());
+        */
+
+        // Server streaming
+        syncClient.primeNumberDecomposition(PrimeNumberDecompositionRequest.newBuilder()
+                .setNumber(287468066)
+                .build())
+                .forEachRemaining(primeNumberDecompositionResponse -> System.out.println(primeNumberDecompositionResponse.getPrimeFactor()));
 
         channel.shutdown();
     }

@@ -41,9 +41,19 @@ message DivideResponse {
     double DivideResult = 1;
 }
 
+message PrimeNumberDecompositionRequest {
+    int32 number = 1;
+}
+
+message PrimeNumberDecompositionResponse {
+    int32 prime_factor = 1;
+}
+
 service CalculatorService {
     rpc Sum(SumRequest) returns (SumResponse) {};
     rpc Subtract(SubtractRequest) returns (SubtractResponse) {};
     rpc Multiply(MultiplyRequest) returns (MultiplyResponse) {};
     rpc Divide(DivideRequest) returns (DivideResponse) {};
+
+    rpc PrimeNumberDecomposition(PrimeNumberDecompositionRequest) returns (stream PrimeNumberDecompositionResponse) {};
 }
