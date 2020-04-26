@@ -1,16 +1,12 @@
 package co.winish.grpc.greeting.server;
 
-import com.proto.greet.GreetRequest;
-import com.proto.greet.GreetResponse;
-import com.proto.greet.GreetServiceGrpc;
-import com.proto.greet.Greeting;
+import com.proto.greet.*;
 import io.grpc.stub.StreamObserver;
 
 public class GreetServiceImpl extends GreetServiceGrpc.GreetServiceImplBase {
 
     @Override
     public void greet(GreetRequest request, StreamObserver<GreetResponse> responseObserver) {
-        //super.greet(request, responseObserver);
         System.out.println("Received grpc call");
 
         Greeting greeting = request.getGreeting();
@@ -25,4 +21,22 @@ public class GreetServiceImpl extends GreetServiceGrpc.GreetServiceImplBase {
         responseObserver.onCompleted();
     }
 
+    @Override
+    public void greetManyTimes(GreetManyTimesRequest request, StreamObserver<GreetManyTimesResponse> responseObserver) {
+        Greeting greeting = request.getGreeting();
+
+        try {
+            for (int i = 0; i < 10; i++) {
+                GreetManyTimesResponse greetManyTimes = GreetManyTimesResponse.newBuilder()
+                        .setResult("Salam alejkym, " + greeting.getFirstName() + " " + greeting.getLastName() + " #" + i)
+                        .build();
+                responseObserver.onNext(greetManyTimes);
+                Thread.sleep(1000L);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            responseObserver.onCompleted();
+        }
+    }
 }

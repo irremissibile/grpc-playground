@@ -8,7 +8,7 @@ import java.io.IOException;
 public class GreetingServer {
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        System.out.println("Salam alejkum!");
+        System.out.println("Salam alejkym!");
 
         Server server = ServerBuilder.forPort(50051)
                 .addService(new GreetServiceImpl())
@@ -19,7 +19,7 @@ public class GreetingServer {
         Runtime.getRuntime().addShutdownHook(new Thread( () -> {
             System.out.println("Received shutdown request");
             server.shutdown();
-            System.out.println("Successfully stoped the server");
+            System.out.println("Successfully stopped the server");
         } ));
 
         server.awaitTermination();
