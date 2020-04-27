@@ -3,6 +3,7 @@ package co.winish.grpc.calculator.client;
 import com.proto.calculator.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 import java.util.Arrays;
@@ -26,7 +27,8 @@ public class CalculatorClient {
         //makeUnaryCall();
         //makeServerStreamingCall();
         //makeClientStreamingCall();
-        makeBiDiStreamingCall();
+        //makeBiDiStreamingCall();
+        makeUnaryCallWithException();
 
         channel.shutdown();
     }
@@ -159,6 +161,21 @@ public class CalculatorClient {
         try {
             latch.await(3L, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void makeUnaryCallWithException() {
+        CalculatorServiceGrpc.CalculatorServiceBlockingStub syncClient = CalculatorServiceGrpc.newBlockingStub(channel);
+
+        int number = -1;
+        try {
+            SquareRootResponse response = syncClient.squareRoot(SquareRootRequest.newBuilder()
+                    .setNumber(number)
+                    .build());
+        } catch (StatusRuntimeException e) {
+            System.out.println("Got an exception!");
+            //System.out.println("Message: " + e.getMessage());
             e.printStackTrace();
         }
     }
