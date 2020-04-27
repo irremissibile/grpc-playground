@@ -1,6 +1,5 @@
 package co.winish.grpc.blog.client;
 
-import co.winish.grpc.calculator.client.CalculatorClient;
 import com.proto.blog.*;
 import io.grpc.ManagedChannel;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
@@ -29,7 +28,9 @@ public class BlogClient {
 
         //makeCreateBlogCall();
         //makeReadBlogCall();
-        makeUpdateBlogCall();
+        //makeUpdateBlogCall();
+        //makeDeleteCall();
+        makeListCall();
 
         channel.shutdown();
     }
@@ -85,5 +86,24 @@ public class BlogClient {
         );
 
         System.out.println(response.toString());
+    }
+
+    private void makeDeleteCall() {
+        BlogServiceGrpc.BlogServiceBlockingStub syncClient = BlogServiceGrpc.newBlockingStub(channel);
+
+        DeleteBlogResponse response = syncClient.deleteBlog(
+                DeleteBlogRequest.newBuilder()
+                        .setId("5ea7289d7dc97935159fae2f")
+                        .build()
+        );
+
+        System.out.println("Deleted: " + response.getId());
+    }
+
+    private void makeListCall() {
+        BlogServiceGrpc.BlogServiceBlockingStub syncClient = BlogServiceGrpc.newBlockingStub(channel);
+
+        syncClient.listBlogs(ListBlogsRequest.newBuilder().build())
+                .forEachRemaining(response -> System.out.println(response.toString()));
     }
 }

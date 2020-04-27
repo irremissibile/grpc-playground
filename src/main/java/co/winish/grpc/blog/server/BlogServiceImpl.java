@@ -4,6 +4,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.result.DeleteResult;
 import com.proto.blog.*;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
@@ -105,6 +106,50 @@ public class BlogServiceImpl extends BlogServiceGrpc.BlogServiceImplBase {
             );
             responseObserver.onCompleted();
         }
+    }
+
+    @Override
+    public void deleteBlog(DeleteBlogRequest request, StreamObserver<DeleteBlogResponse> responseObserver) {
+        String id = request.getId();
+        DeleteResult result = null;
+
+        try {
+            result = collection.deleteOne(eq("_id", new ObjectId(id)));
+        } catch (Exception e) {
+            responseObserver.onError(
+                    Status.NOT_FOUND
+                            .withDescription("The blog with the sent id is not found")
+                            .augmentDescription(e.getMessage())
+                            .asRuntimeException()
+            );
+        }
+
+        if (result.getDeletedCount() == 0) {
+            System.out.println("The blog is not found");
+            responseObserver.onError(
+                    Status.NOT_FOUND
+                            .withDescription("The blog with the sent id is not found")
+                            .asRuntimeException()
+            );
+        } else {
+            System.out.println("Blog was deleted");
+            responseObserver.onNext(DeleteBlogResponse.newBuilder()
+                    .setId(id)
+                    .build());
+
+            responseObserver.onCompleted();
+        }
+
+    }
+
+    @Override
+    public void listBlogs(ListBlogsRequest request, StreamObserver<ListBlogsResponse> responseObserver) {
+        collection.find().iterator().forEachRemaining(document -> responseObserver.onNext(
+                ListBlogsResponse.newBuilder()
+                        .setBlog(documentToBlog(document)).build()
+        ));
+
+        responseObserver.onCompleted();
     }
 
     private Blog documentToBlog(Document document) {
