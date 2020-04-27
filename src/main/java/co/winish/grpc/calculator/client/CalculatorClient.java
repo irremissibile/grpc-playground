@@ -4,8 +4,12 @@ import com.proto.calculator.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
+import javax.net.ssl.SSLException;
+import java.io.File;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -14,9 +18,13 @@ public class CalculatorClient {
     private ManagedChannel channel;
 
     private void init(String address, int port) {
-        channel = ManagedChannelBuilder.forAddress(address, port)
-                .usePlaintext()
-                .build();
+        try {
+            channel = NettyChannelBuilder.forAddress(address, port)
+                    .sslContext(GrpcSslContexts.forClient().trustManager(new File("ssl/ca.crt")).build())
+                    .build();
+        } catch (SSLException e) {
+            e.printStackTrace();
+        }
 
         System.out.println("Done init");
     }

@@ -1,10 +1,13 @@
 package co.winish.grpc.greeting.client;
 
 import com.proto.greet.*;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
+import io.grpc.*;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
+import javax.net.ssl.SSLException;
+import java.io.File;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -14,9 +17,13 @@ public class GreetingClient {
     private Greeting greeting;
 
     private void init(String address, int port) {
-        channel = ManagedChannelBuilder.forAddress(address, port)
-                .usePlaintext()
-                .build();
+        try {
+            channel = NettyChannelBuilder.forAddress(address, port)
+                    .sslContext(GrpcSslContexts.forClient().trustManager(new File("ssl/ca.crt")).build())
+                    .build();
+        } catch (SSLException e) {
+            e.printStackTrace();
+        }
 
         greeting = Greeting.newBuilder()
                 .setFirstName("Mick")
@@ -33,6 +40,7 @@ public class GreetingClient {
         //makeServerStreamingCall();
         //makeClientStreamingCall();
         makeBiDiStreamingCall();
+        //makeUnaryCallWithDeadline();
 
         channel.shutdown();
     }
@@ -183,6 +191,28 @@ public class GreetingClient {
             latch.await(3L, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void makeUnaryCallWithDeadline() {
+        GreetServiceGrpc.GreetServiceBlockingStub syncClient = GreetServiceGrpc.newBlockingStub(channel);
+
+        try {
+            System.out.println("Sending the request");
+            GreetWithDeadlineResponse response = syncClient.withDeadline(Deadline.after(2000L, TimeUnit.MILLISECONDS))
+                    .greetWithDeadline(
+                            GreetWithDeadlineRequest.newBuilder()
+                                    .setGreeting(Greeting.newBuilder()
+                                            .setFirstName("Keira")
+                                            .setLastName("Knightley")
+                                            .build()
+                                    ).build());
+            System.out.println("Message: " + response.getResult());
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus() == Status.DEADLINE_EXCEEDED)
+                System.out.println("The deadline has been exceeded");
+            else
+                e.printStackTrace();
         }
     }
 }
